@@ -90,6 +90,7 @@ TO_PATCH = [
     'status_set',
     'get_relation_ip',
     'update_dns_ha_resource_params',
+    'is_db_initialised',
 ]
 NEUTRON_CONF_DIR = "/etc/neutron"
 
@@ -931,4 +932,17 @@ class NeutronAPIHooksTests(CharmTestCase):
 
     def test_designate_peer_departed(self):
         self._call_hook('external-dns-relation-departed')
+        self.assertTrue(self.CONFIGS.write.called_with(NEUTRON_CONF))
+
+    def test_infoblox_peer_changed(self):
+        self.is_db_initialised.return_value = True
+        self.test_relation.set({
+            'dc_id': '0',
+        })
+        self.relation_ids.side_effect = self._fake_relids
+        self._call_hook('infoblox-neutron-relation-changed')
+        self.assertTrue(self.CONFIGS.write.called_with(NEUTRON_CONF))
+
+    def test_infoblox_peer_departed(self):
+        self._call_hook('infoblox-neutron-relation-departed')
         self.assertTrue(self.CONFIGS.write.called_with(NEUTRON_CONF))
